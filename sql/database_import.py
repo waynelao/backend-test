@@ -1,6 +1,10 @@
 # Import required modules
 import csv
 import sqlite3
+from dateutil import parser
+import pdb
+
+
 
 # Connecting to the sqlite database
 # connection = sqlite3.connect('netflix.sql')
@@ -12,10 +16,10 @@ cursor = connection.cursor()
 
 # Table definition
 create_table = '''CREATE TABLE netflixshows(
-               showid TEXT PRIMARY KEY,
+               showid INTEGER PRIMARY KEY AUTOINCREMENT,
                type TEXT NOT NULL, title TEXT,
                director TEXT, cast TEXT,
-               country TEXT, dateadded TEXT,
+               country TEXT, dateadded TIMESTAMP,
                releaseyear INTEGER, rating TEXT,
                duration TEXT, listedin TEXT,
                description TEXT)
@@ -24,26 +28,29 @@ create_table = '''CREATE TABLE netflixshows(
 # Creating the table into our database
 cursor.execute(create_table)
 
-# Opening the person-records.csv file
-file = open('netflix_titles.csv')
-
-# Reading the contents of the csv file
-contents = csv.reader(file)
-
 # SQL query to insert data into the netflixshows table
 insert_records = '''
                 INSERT INTO netflixshows (
-                   showid, type, title, director, 
+                   type, title, director, 
                    cast, country, dateadded,
                    releaseyear, rating, 
                    duration, listedin, 
                    description) VALUES
-                   (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                   (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                    '''
 
 # Importing the contents of the file
 # into our netflixshows table
-cursor.executemany(insert_records, contents)
+with open("netflix_titles.csv", 'r') as csvfile:
+    csvreader = csv.reader(csvfile)
+    # This skips the first row of the CSV file.
+    next(csvreader)
+    for row in csvreader:
+        if row[6]:
+            row[6] = parser.parse(row[6])
+        cursor.execute(insert_records, (row[1], row[2], row[3], row[4], row[5], 
+                             row[6], row[7], row[8], row[9], row[10], row[11]))
+
 
 # SQL query to retrieve all data from
 # the netflixshows table To verify that the
