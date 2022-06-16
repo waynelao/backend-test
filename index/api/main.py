@@ -4,6 +4,7 @@ from flask import jsonify
 import index
 from index.model import get_db
 import copy
+import datetime
 import pdb
 
 
@@ -14,12 +15,13 @@ def index_shows():
     """Return a list of shows from the country and the type"""
     country = flask.request.args.get('country').lower()
     # pdb.set_trace()
-    type1 = ''
-    type2 = ''
-    if flask.request.args.get('movie'):
-        type1 = flask.request.args.get('movie').lower()
-    if flask.request.args.get('tvshow'):
-        type2 = flask.request.args.get('tvshow').lower()
+    type = ''
+    sort = 'dateadded'
+
+    if flask.request.args.get('type'):
+        type = flask.request.args.get('type').lower()
+    if flask.request.args.get('sort'):
+        sort = flask.request.args.get('sort').lower()
 
     # construct the context dictionary
     context = {}
@@ -30,17 +32,19 @@ def index_shows():
 
     # get the type, title, director, cast, country, rating, listed_in and description of the show
     # [{type:, title:, director:, cast:, country:, rating:, listed_in:, description:}]
-    if type1 and not type2:
-        # query = "SELECT * FROM netflixshows WHERE type = ? COLLATE NOCASE AND country = ? COLLATE NOCASE;"
-        # dataShow = cursor.execute(query, (type1, country,)).fetchall()
-        query = "SELECT * FROM netflixshows WHERE type = ? COLLATE NOCASE AND country = ? COLLATE NOCASE;"
-        dataShow = cursor.execute(query, (type1, country,)).fetchall()
-    elif not type1 and type2:
-        query = "SELECT * FROM netflixshows WHERE type = ? COLLATE NOCASE AND country = ? COLLATE NOCASE;"
-        dataShow = cursor.execute(query, (type2, country,)).fetchall()
-    else:
-        query = "SELECT * FROM netflixshows WHERE country = ? COLLATE NOCASE;"
+    if not type and sort == 'dateadded':
+        query = "SELECT * FROM netflixshows WHERE country = ? COLLATE NOCASE ORDER BY dateadded DESC;"
         dataShow = cursor.execute(query, (country,)).fetchall()
+    elif not type and sort == 'releaseyear':
+        query = "SELECT * FROM netflixshows WHERE country = ? COLLATE NOCASE ORDER BY releaseyear DESC;"
+        dataShow = cursor.execute(query, (country,)).fetchall()
+    elif type and sort == 'dateaded':
+        query = "SELECT * FROM netflixshows WHERE type = ? COLLATE NOCASE AND country = ? COLLATE NOCASE ORDER BY dateadded DESC;"
+        dataShow = cursor.execute(query, (type, country,)).fetchall()
+    else:
+        query = "SELECT * FROM netflixshows WHERE type = ? COLLATE NOCASE AND country = ? COLLATE NOCASE ORDER BY releaseyear DESC;"
+        dataShow = cursor.execute(query, (type, country,)).fetchall()
+
     
     # pdb.set_trace()
     # get the show info
@@ -53,8 +57,61 @@ def index_shows():
 
     return jsonify(**context)
 
-    
 
+@index.app.route('/api/v1/insertshows/', methods=['POST'])
+def insert_shows():
+    """Return a recently added show"""
+    # construct the context dictionary
+    context = {}
+    # access the database
+    cursor = get_db().cursor()
+
+    # get the parameters (for demonstration, only support add
+    # title and country now)
+    title = flask.request.args.get('title')
+    country = flask.request.args.get('country')
+    date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    # insert shows
+    query = '''
+            INSERT INTO netflixshows (
+                type, title, director, 
+                cast, country, dateadded,
+                releaseyear, rating, 
+                duration, listedin, 
+                description) VALUES
+                (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                '''
+    cursor.execute(query, ("Movie", title, " ", " ", country,
+                           date, 2022, " ", "100 min", " ", " "))
+    get_db().commit()
+
+    context['type'] = 'Movie'
+    context['title'] = title
+    context['country'] = country
+    context['dateadded'] = date
+    context['releaseyear'] = 2022
+    context['duration'] = '100 min'
+    return (jsonify(**context), 201)
+
+
+@index.app.route('/api/v1/shows/<showid>/', methods=['DELETE'])
+def delete_shows(showid):
+    # construct the context dictionary
+    context = {}
+    # access the database
+    cursor = get_db().cursor()
+
+    # check is the show exists
+    query = "SELECT * FROM netflixshows WHERE showid = ?;"
+    dataShow = cursor.execute(query, (showid,)).fetchall()
+    if not dataShow:
+        raise InvalidUsage("Not Found", status_code=404)
+    else:
+        query = "DELETE FROM netflixshows WHERE showid = ?;"
+        cursor.execute(query, (showid,))
+        get_db().commit()
+        return (jsonify(**context), 204)
 
 
 @index.app.route('/api/v1/', methods=['GET'])
@@ -65,3 +122,24 @@ def index_url():
         "url": "/api/v1/",
     }
     return jsonify(**results)
+
+
+class InvalidUsage(Exception):
+    """For errors."""
+
+    status_code = 400
+
+    def __init__(self, message, status_code=None, payload=None):
+        """For errors."""
+        Exception.__init__(self)
+        self.message = message
+        if status_code is not None:
+            self.status_code = status_code
+        self.payload = payload
+
+    def to_dict(self):
+        """For errors."""
+        rvresult = dict(self.payload or ())
+        rvresult['message'] = self.message
+        rvresult['status_code'] = self.status_code
+        return rvresult
