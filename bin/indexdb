@@ -1,0 +1,45 @@
+#!/bin/bash
+# indexdb
+
+# Stop on errors
+# See https://vaneyckt.io/posts/safer_bash_scripts_with_set_euxo_pipefail/
+
+# Sanity check command line options
+usage() {
+  echo "Usage: $0 (create|destroy|reset)"
+}
+
+if [ $# -ne 1 ]; then
+  usage
+  exit 1
+fi
+
+# Parse argument.  $1 is the first argument
+case $1 in 
+  "create")
+      if [ -f "var/netflix.sqlite3" ]; then
+        echo "Error: database already exists"
+      else
+        python sql/database_import.py
+        mv sql/netflix.sqlite3 var
+        echo "index database created"
+      fi
+    ;;
+
+  "destroy")
+    rm -rf var/netflix.sqlite3
+    echo "index database deleted"
+    ;;
+
+  "reset")
+    rm -rf var/netflix.sqlite3
+    echo "index database deleted"
+    python sql/database_import.py
+    mv sql/netflix.sqlite3 var
+    echo "index database created"
+    ;; 
+  *)
+    usage
+    exit 1
+    ;;
+esac  
