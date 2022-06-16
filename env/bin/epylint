@@ -1,6 +1,4 @@
-#!/bin/sh
-'''exec' "/Users/waynelao/Documents/cs job hunting/intern/torqata assignment/backend-projects/env/bin/python3.9" "$0" "$@"
-' '''
+#!/Users/waynelao/Documents/cs-job-hunting/intern/torqata-assignment/backend-test/env/bin/python3.9
 # -*- coding: utf-8 -*-
 import re
 import sys

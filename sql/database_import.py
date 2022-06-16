@@ -3,7 +3,8 @@ import csv
 import sqlite3
 
 # Connecting to the sqlite database
-connection = sqlite3.connect('netflix.sql')
+# connection = sqlite3.connect('netflix.sql')
+connection = sqlite3.connect('netflix.sqlite3')
 
 # Creating a cursor object to execute
 # SQL queries on a database table
@@ -15,7 +16,7 @@ create_table = '''CREATE TABLE netflixshows(
                type TEXT NOT NULL, title TEXT,
                director TEXT, cast TEXT,
                country TEXT, dateadded TEXT,
-               releaseyear TEXT, rating TEXT,
+               releaseyear INTEGER, rating TEXT,
                duration TEXT, listedin TEXT,
                description TEXT)
                '''
@@ -32,7 +33,7 @@ contents = csv.reader(file)
 # SQL query to insert data into the netflixshows table
 insert_records = '''
                 INSERT INTO netflixshows (
-                   showid, title, type, director, 
+                   showid, type, title, director, 
                    cast, country, dateadded,
                    releaseyear, rating, 
                    duration, listedin, 
