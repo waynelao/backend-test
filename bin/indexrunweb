@@ -1,0 +1,15 @@
+#!/bin/bash
+# Stop on errors, print commands
+# See https://vaneyckt.io/posts/safer_bash_scripts_with_set_euxo_pipefail/
+set -Eeuo pipefail
+set -x
+
+if [ -f "var/netflix.sqlite3" ]; then
+   echo "database already exists"
+else
+   ./bin/indexdb create
+fi
+
+export FLASK_ENV=development
+export FLASK_APP=index
+flask run --host 127.0.0.1 --port 8080
