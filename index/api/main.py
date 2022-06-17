@@ -114,11 +114,39 @@ def delete_shows(showid):
         return (jsonify(**context), 204)
 
 
+@index.app.route('/api/v1/updateshows/', methods=['PATCH'])
+def update_shows():
+    # construct the context dictionary
+    context = {}
+    context['updated_shows'] = []
+    # access the database
+    cursor = get_db().cursor()
+    # get the parameter for showid and description
+    showid = flask.request.args.get('showid')
+    description = flask.request.args.get('description').lower()
+
+    # check is the show exists
+    query = "SELECT * FROM netflixshows WHERE showid = ?;"
+    dataShow = cursor.execute(query, (showid,)).fetchall()
+    if not dataShow:
+        raise InvalidUsage("Not Found", status_code=404)
+    else:
+        query = "UPDATE netflixshows SET description = ? WHERE showid = ?;"
+        cursor.execute(query, (description, showid,))
+        get_db().commit()
+        query = "SELECT * FROM netflixshows WHERE showid = ?;"
+        dataShow = cursor.execute(query, (showid,)).fetchall()
+        context['updated_shows'].append(copy.deepcopy(dataShow))
+        return (jsonify(**context), 202)
+
+
 @index.app.route('/api/v1/', methods=['GET'])
 def index_url():
     """Return a list of services available"""
     results = {
-        "shows": "/api/v1/shows/",
+        "get and delete shows": "/api/v1/shows/",
+        "insert shows": "/api/v1/insertshows/",
+        "update shows": "/api/v1/updateshows/",
         "url": "/api/v1/",
     }
     return jsonify(**results)
