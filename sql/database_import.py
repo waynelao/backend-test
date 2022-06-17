@@ -8,7 +8,7 @@ import pdb
 
 # Connecting to the sqlite database
 # connection = sqlite3.connect('netflix.sql')
-connection = sqlite3.connect('netflix.sqlite3')
+connection = sqlite3.connect('sql/netflix.sqlite3')
 
 # Creating a cursor object to execute
 # SQL queries on a database table
@@ -41,7 +41,7 @@ insert_records = '''
 
 # Importing the contents of the file
 # into our netflixshows table
-with open("netflix_titles.csv", 'r') as csvfile:
+with open("sql/netflix_titles.csv", 'r') as csvfile:
     csvreader = csv.reader(csvfile)
     # This skips the first row of the CSV file.
     next(csvreader)
@@ -56,16 +56,16 @@ with open("netflix_titles.csv", 'r') as csvfile:
 # the netflixshows table To verify that the
 # data of the csv file has been successfully
 # inserted into the table
-select_all = "SELECT * FROM netflixshows"
-rows = cursor.execute(select_all).fetchall()
-index = 0
+# select_all = "SELECT * FROM netflixshows"
+# rows = cursor.execute(select_all).fetchall()
+# index = 0
 
 # display the first ten data points
-for row in rows:
-    print(row)
-    index += 1
-    if (index >= 10):
-        break
+# for row in rows:
+#    print(row)
+#    index += 1
+#    if (index >= 10):
+#        break
 
 # Committing the changes
 connection.commit()
