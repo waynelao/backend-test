@@ -1,1 +1,9 @@
-runtime: python39
+runtime: python
+env: flex
+entrypoint: ./bin/indexrunweb
+
+runtime_config:
+    python_version: 3
+
+env_variables:
+    CLOUD_STORAGE_BUCKET: <your-cloud-storage-bucket>
